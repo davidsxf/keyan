@@ -36,6 +36,9 @@ ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ") if os.environ.
 
 
 
+from import_export.formats.base_formats import XLSX
+IMPORT_EXPORT_FORMATS = [XLSX]
+
 
 
 # Application definition

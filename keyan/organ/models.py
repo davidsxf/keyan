@@ -92,7 +92,7 @@ class Outsider(Participant):
 class Department(models.Model):
     num = models.IntegerField(verbose_name='序号')
     name = models.CharField(max_length=30,verbose_name="名称",null=True)
-    director = models.ForeignKey('Employee',verbose_name='部门负责人',null=True, on_delete=models.SET_NULL)
+    director = models.ForeignKey('Employee',verbose_name='部门负责人',null=True,blank=True,on_delete=models.SET_NULL)
 
     def __str__(self):
         return self.name
