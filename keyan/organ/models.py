@@ -42,8 +42,19 @@ SEX = (
     
     )
 
+
+# 项目参与人类型
+PARTICIPANT_TYPE = (
+    ("employee", "职工"),
+    ("student", "学生"),
+    ("outsider", "所外人员"),
+    
+
+)
 class Participant(models.Model):
     name = models.CharField('姓名', max_length=20)
+    participant_type = models.CharField('参与者类型', max_length=20, choices=PARTICIPANT_TYPE)
+
 
     def __str__(self):
         return str(self.name)
@@ -104,9 +115,9 @@ class Team(models.Model):
     num = models.IntegerField(verbose_name='序号',null=True)
     name = models.CharField(max_length=30,verbose_name="名称")
     department = models.ForeignKey(Department,verbose_name='部门', null=True,on_delete=models.SET_NULL)
-    description = models.TextField(verbose_name="描述",null=True)
+    description = models.TextField(verbose_name="描述",null=True,blank=True)
     director = models.ForeignKey('Employee', verbose_name='团队负责人',
-                                 null=True, on_delete=models.SET_NULL, related_name='led_teams')
+                                 null=True ,on_delete=models.SET_NULL, related_name='led_teams')
 
     def __str__(self):
         return self.name

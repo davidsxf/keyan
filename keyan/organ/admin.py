@@ -46,6 +46,15 @@ class OrgAdmin(ImportExportModelAdmin):
     class Meta:
         model = Org
 
+class ParticipantAdmin(ImportExportModelAdmin):
+      
+    search_fields = ['name']
+
+    list_display = ('id', 'name')
+    
+    class Meta:
+        model = Participant
+
 
 admin.site.register(Org, OrgAdmin)
 admin.site.register(Outsider, OutsiderAdmin)
@@ -53,3 +62,8 @@ admin.site.register(Department, DepartmentAdmin)
 admin.site.register(Team, TeamAdmin)
 admin.site.register(Employee, EmployeeAdmin)
 admin.site.register(Student)
+
+
+
+
+admin.site.register(Participant, ParticipantAdmin)

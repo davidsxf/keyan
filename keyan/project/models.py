@@ -16,19 +16,30 @@ def project_directory_path(instance, filename):
     # 文件上传到MEDIA_ROOT/user_<id>/<filename>目录中
     return 'project_{0}/{1}'.format(instance.project.id, filename)
 
-PROJECT_TYPE = (
-    ("Ministerial", "部级科研项目"),
-    ("System Position", "国家现代农业产业技术体系岗位专家"),
-    ("National KeyRD", "国家重点研发计划课题"),
-    ("NSFC General ", "国家自然科学基金（面上项目）"),
-    ("National Subtopic", "其他国家级项目（子课题）"),
-    ("Provincial", "省级科研项目"),
-    ("City", "市级科研项目"),
-    ("Academy", "院级科研项目"),
-    ("Institute", "所级基本科研业务费专项项目"),
-    ("Other", "其他项目计划"),
+# PROJECT_TYPE = (
+#     ("Ministerial", "部级科研项目"),
+#     ("System Position", "国家现代农业产业技术体系岗位专家"),
+#     ("National KeyRD", "国家重点研发计划课题"),
+#     ("NSFC General ", "国家自然科学基金（面上项目）"),
+#     ("National Subtopic", "其他国家级项目（子课题）"),
+#     ("Provincial", "省级科研项目"),
+#     ("City", "市级科研项目"),
+#     ("Academy", "院级科研项目"),
+#     ("Institute", "所级基本科研业务费专项项目"),
+#     ("Other", "其他项目计划"),
 
+# )
+
+PROJECT_TYPE = (
+    ("JSFW", "技术服务"),
+    ("JSZX", "技术咨询"),   
+    ("JSKF", "技术开发（合作）"),
+    ("JSWT", "技术开发（委托）"),
+    ("JSZR", "技术转让（转让）"),
+    ("JSXK", "技术转让（许可）"),
+    ("OTHER", "其他"),
 )
+
 
 PRPJECT_STATUS = (
     ("Ongoing", "在研"),
@@ -48,10 +59,10 @@ class Project(models.Model):
     source = models.CharField('资金来源',max_length=100,blank=True, null=True)
     director = models.ForeignKey(Employee,verbose_name='项目负责人',blank=True, null=True,on_delete=models.SET_NULL,related_name='directors')
     contract_fund = models.DecimalField('合同经费(万元)',max_digits=7, decimal_places=2,default=0)
-    # support_fund = models.DecimalField('配套经费(万元)',max_digits=7, decimal_places=2)
-    # out_fund = models.DecimalField('外拨经费(万元)',max_digits=7, decimal_places=2)
-    # itself_fund = models.DecimalField('自筹经费(万元)',max_digits=7, decimal_places=2)
-    # year = models.IntegerField('年度',default=current_year)
+    support_fund = models.DecimalField('配套经费(万元)',max_digits=7, decimal_places=2)
+    out_fund = models.DecimalField('外拨经费(万元)',max_digits=7, decimal_places=2)
+    itself_fund = models.DecimalField('自筹经费(万元)',max_digits=7, decimal_places=2)
+    year = models.IntegerField('年度',default=current_year)
     participant = models.ManyToManyField(Participant,verbose_name='项目参与人',through='Participantion',related_name='participants')
     enter_year = models.IntegerField('登记年度',default=current_year,blank=True, null=True)
     enter_info = models.CharField('登记情况',max_length=50,blank=True, null=True)
@@ -88,7 +99,7 @@ class Participantion(models.Model):
     class Meta:
         verbose_name = '项目参与'
         verbose_name_plural = '项目参与'
-        unique_together = [['project', 'participant']]
+        unique_together = ('participant', 'project', 'order')  # 确保同一参与者在同一项目中参与顺序唯一
 
 
 class ProjectDoc(models.Model):
