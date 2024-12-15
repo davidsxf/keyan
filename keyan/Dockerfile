@@ -28,6 +28,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 复制项目文件
 COPY . .
 
+# 创建必要的目录
+RUN mkdir -p staticfiles media
+
 # 收集静态文件
 RUN python manage.py collectstatic --noinput
 
