@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("SECRET_KEY", default='123')
+SECRET_KEY = os.environ.get("SECRET_KEY", default='prfri1324')
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -45,7 +45,7 @@ IMPORT_EXPORT_FORMATS = [XLSX]
 # Application definition
 
 INSTALLED_APPS = [
-
+    # 'jazzmin',  # 必须放在 django.contrib.admin 之前
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -53,8 +53,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'dashboard',
+    'contact',
+    'accounts',
     'project',
     'organ',
+    'finance',
     'import_export',
 ]
 
@@ -148,3 +151,17 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# 登录相关配置
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'dashboard:index'
+LOGOUT_REDIRECT_URL = 'login'
+
+# 邮件配置（用于密码重置）
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # 开发环境使用控制台输出
+# EMAIL_HOST = 'smtp.example.com'  # 生产环境配置
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'your-email@example.com'
+# EMAIL_HOST_PASSWORD = 'your-password'
+

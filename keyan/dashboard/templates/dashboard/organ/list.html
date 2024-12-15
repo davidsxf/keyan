@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% load static %}
+{% load dashboard_extras %}
+
+{% block title %}机构列表{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">机构列表</h1>
+        {% if perms.organ.add_organ %}
+        <a href="{% url 'dashboard:organ_add' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> 新建机构
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">总机构数</h5>
+                    <h2 class="card-text">{{ stats.total_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">高校</h5>
+                    <h2 class="card-text">{{ stats.university_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">企业</h5>
+                    <h2 class="card-text">{{ stats.company_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">横向机构</h5>
+                    <h2 class="card-text">{{ stats.research_count }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 筛选区域 -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="organ_type" class="form-label">机构类型</label>
+                    <select class="form-select" id="organ_type" name="organ_type">
+                        <option value="">全部</option>
+                        {% for type_code, type_name in organ_types %}
+                        <option value="{{ type_code }}" {% if type_code == filters.organ_type %}selected{% endif %}>
+                            {{ type_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="search" class="form-label">搜索</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           value="{{ filters.search }}" placeholder="机构代码/名称/联系人/电话">
+                </div>
+                <div class="col-md-3">
+                    <label for="sort" class="form-label">排序</label>
+                    <select class="form-select" id="sort" name="sort">
+                        <option value="name" {% if filters.sort == 'name' %}selected{% endif %}>名称升序</option>
+                        <option value="-name" {% if filters.sort == '-name' %}selected{% endif %}>名称降序</option>
+                        <option value="created_at" {% if filters.sort == 'created_at' %}selected{% endif %}>创建时间升序</option>
+                        <option value="-created_at" {% if filters.sort == '-created_at' %}selected{% endif %}>创建时间降序</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> 搜索
+                        </button>
+                        <a href="{% url 'dashboard:organ_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-redo"></i> 重置
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 机构列表 -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>机构代码</th>
+                            <th>机构名称</th>
+                            <th>机构类型</th>
+                            <th>联系人</th>
+                            <th>联系电话</th>
+                            <th>地址</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for organ in organs %}
+                        <tr>
+                            <td>{{ organ.code }}</td>
+                            <td>{{ organ.name }}</td>
+                            <td>{{ organ.get_organ_type_display }}</td>
+                            <td>{{ organ.contact_person }}</td>
+                            <td>{{ organ.contact_phone }}</td>
+                            <td>{{ organ.address }}</td>
+                            <td>{{ organ.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'dashboard:organ_detail' organ.id %}" class="btn btn-sm btn-info" title="查看详情">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if perms.organ.change_organ %}
+                                    <a href="{% url 'dashboard:organ_edit' organ.id %}" class="btn btn-sm btn-warning" title="编辑">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center">暂无机构</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if organs.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if organs.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ organs.previous_page_number }}{% if query_string %}&{{ query_string }}{% endif %}">
+                            上一页
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in organs.paginator.page_range %}
+                    {% if num == organs.number %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if query_string %}&{{ query_string }}{% endif %}">
+                            {{ num }}
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if organs.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ organs.next_page_number }}{% if query_string %}&{{ query_string }}{% endif %}">
+                            下一页
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% load static %}
+{% load dashboard_extras %}
+
+{% block title %}收入管理{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">收入管理</h1>
+        <a href="{% url 'dashboard:income_add' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> 新建收入
+        </a>
+    </div>
+
+    <!-- 筛选器 -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="project" class="form-label">项目</label>
+                    <select class="form-select" id="project" name="project">
+                        <option value="">全部项目</option>
+                        {% for project in projects %}
+                        <option value="{{ project.id }}" {% if request.GET.project == project.id|stringformat:"s" %}selected{% endif %}>
+                            {{ project.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="category" class="form-label">收入类型</label>
+                    <select class="form-select" id="category" name="category">
+                        <option value="">全部类型</option>
+                        {% for value, label in income_categories %}
+                        <option value="{{ value }}" {% if request.GET.category == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="status" class="form-label">状态</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">全部状态</option>
+                        {% for value, label in income_status %}
+                        <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="date_from" class="form-label">开始日期</label>
+                    <input type="date" class="form-control" id="date_from" name="date_from" 
+                           value="{{ request.GET.date_from }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="date_to" class="form-label">结束日期</label>
+                    <input type="date" class="form-control" id="date_to" name="date_to" 
+                           value="{{ request.GET.date_to }}">
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 收入列表 -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>日期</th>
+                            <th>项目</th>
+                            <th>收入类型</th>
+                            <th>金额</th>
+                            <th>状态</th>
+                            <th>说明</th>
+                            <th>创建人</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for income in incomes %}
+                        <tr>
+                            <td>{{ income.date|date:"Y-m-d" }}</td>
+                            <td>{{ income.project.name }}</td>
+                            <td>{{ income.get_category_display }}</td>
+                            <td>¥{{ income.amount|to_wan }}万</td>
+                            <td>
+                                <span class="badge {% if income.status == 'confirmed' %}bg-success{% elif income.status == 'cancelled' %}bg-danger{% else %}bg-warning{% endif %}">
+                                    {{ income.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ income.description|truncatechars:30 }}</td>
+                            <td>{{ income.created_by.get_full_name|default:income.created_by.username }}</td>
+                            <td>{{ income.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'dashboard:income_detail' income.pk %}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if income.status == 'pending' %}
+                                    <a href="{% url 'dashboard:income_edit' income.pk %}" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center">暂无收入记录</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分页器 -->
+            {% if incomes.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if incomes.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ incomes.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
+                            上一页
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in incomes.paginator.page_range %}
+                    {% if incomes.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
+                            {{ num }}
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if incomes.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ incomes.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
+                            下一页
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 统计信息 -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">总收入</h5>
+                    <h2 class="card-text">¥{{ total_amount|to_wan }}万</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">已确认收入</h5>
+                    <h2 class="card-text">¥{{ confirmed_amount|to_wan }}万</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">待确认收入</h5>
+                    <h2 class="card-text">¥{{ pending_amount|to_wan }}万</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // 日期范围验证
+    $('#date_to').change(function() {
+        var dateFrom = $('#date_from').val();
+        var dateTo = $(this).val();
+        
+        if (dateFrom && dateTo && dateTo < dateFrom) {
+            alert('结束日期不能早于开始日期');
+            $(this).val('');
+        }
+    });
+});
+</script>
+{% endblock %} 

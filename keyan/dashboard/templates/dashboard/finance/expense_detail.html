@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}支出详情{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">支出详情</h1>
+        <div>
+            {% if expense.status == 'draft' %}
+            <a href="{% url 'dashboard:expense_edit' expense.pk %}" class="btn btn-warning">
+                <i class="fas fa-edit"></i> 编辑
+            </a>
+            {% endif %}
+            <a href="{% url 'dashboard:expense_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> 返回列表
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- 基本信息 -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">基本信息</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">项目</label>
+                            <p class="form-control-static">{{ expense.project.name }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">预算科目</label>
+                            <p class="form-control-static">{{ expense.budget.name }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">支出类型</label>
+                            <p class="form-control-static">{{ expense.get_category_display }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">金额</label>
+                            <p class="form-control-static">¥{{ expense.amount|floatformat:2 }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">支出日期</label>
+                            <p class="form-control-static">{{ expense.date|date:"Y-m-d" }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">收款人</label>
+                            <p class="form-control-static">{{ expense.payee }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">银行账号</label>
+                            <p class="form-control-static">{{ expense.bank_account|default:"无" }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">开户行</label>
+                            <p class="form-control-static">{{ expense.bank_name|default:"无" }}</p>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label">说明</label>
+                            <p class="form-control-static">{{ expense.description|linebreaks }}</p>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label">备注</label>
+                            <p class="form-control-static">{{ expense.remarks|default:"无"|linebreaks }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 发票信息 -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">发票信息</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">发票号</label>
+                            <p class="form-control-static">{{ expense.invoice_number|default:"无" }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">发票日期</label>
+                            <p class="form-control-static">{{ expense.invoice_date|date:"Y-m-d"|default:"无" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 附件信息 -->
+            {% if expense.attachment %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">附件</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-file fa-2x me-3"></i>
+                        <div>
+                            <h6 class="mb-1">{{ expense.attachment.name|split:"/"|last }}</h6>
+                            <a href="{{ expense.attachment.url }}" class="btn btn-sm btn-primary" target="_blank">
+                                <i class="fas fa-download"></i> 下载附件
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- 状态信息 -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">状态信息</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <label class="form-label">当前状态</label>
+                        <div>
+                            <span class="badge {% if expense.status == 'approved' %}bg-success{% elif expense.status == 'rejected' %}bg-danger{% elif expense.status == 'submitted' %}bg-info{% else %}bg-warning{% endif %} fs-6">
+                                {{ expense.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+
+                    {% if expense.status == 'draft' %}
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#submitModal">
+                            <i class="fas fa-paper-plane"></i> 提交审批
+                        </button>
+                    </div>
+                    {% elif expense.status == 'submitted' and user.is_staff %}
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#approveModal">
+                            <i class="fas fa-check"></i> 批准支出
+                        </button>
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                            <i class="fas fa-times"></i> 拒绝支出
+                        </button>
+                    </div>
+                    {% endif %}
+
+                    {% if expense.approver %}
+                    <hr>
+                    <div class="mb-3">
+                        <label class="form-label">审批人</label>
+                        <p class="form-control-static">
+                            {{ expense.approver.get_full_name|default:expense.approver.username }}
+                        </p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">审批时间</label>
+                        <p class="form-control-static">{{ expense.approve_date|date:"Y-m-d H:i:s" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">审批意见</label>
+                        <p class="form-control-static">{{ expense.approve_remarks|default:"无"|linebreaks }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 创建信息 -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">创建信息</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">创建人</label>
+                        <p class="form-control-static">
+                            {{ expense.created_by.get_full_name|default:expense.created_by.username }}
+                        </p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">创建时间</label>
+                        <p class="form-control-static">{{ expense.created_at|date:"Y-m-d H:i:s" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">最后更新</label>
+                        <p class="form-control-static">{{ expense.updated_at|date:"Y-m-d H:i:s" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 提交审批模态框 -->
+<div class="modal fade" id="submitModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">提交审批</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'dashboard:expense_submit' expense.pk %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>确认要提交该笔支出进行审批吗？</p>
+                    <div class="mb-3">
+                        <label for="submit_remarks" class="form-label">提交说明</label>
+                        <textarea class="form-control" id="submit_remarks" name="submit_remarks" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">确认提交</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 批准支出模态框 -->
+<div class="modal fade" id="approveModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">批准支出</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'dashboard:expense_approve' expense.pk %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>确认要批准该笔支出吗？</p>
+                    <div class="mb-3">
+                        <label for="approve_remarks" class="form-label">审批意见</label>
+                        <textarea class="form-control" id="approve_remarks" name="approve_remarks" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-success">确认批准</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 拒绝支出模态框 -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">拒绝支出</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'dashboard:expense_reject' expense.pk %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>确认要拒绝该笔支出吗？</p>
+                    <div class="mb-3">
+                        <label for="reject_reason" class="form-label">拒绝原因</label>
+                        <textarea class="form-control" id="reject_reason" name="reject_reason" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-danger">确认拒绝</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

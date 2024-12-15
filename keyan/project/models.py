@@ -1,116 +1,102 @@
 from django.db import models
-from organ.models import Outsider, Org, Employee, Student, Participant
-import datetime
-# Create your models here.
-
-
-def year_choices():
-    return [(r, r) for r in range(1984, datetime.date.today().year+1)]
-
-
-def current_year():
-    return datetime.date.today().year
-
-
-def project_directory_path(instance, filename):
-    # 文件上传到MEDIA_ROOT/user_<id>/<filename>目录中
-    return 'project_{0}/{1}'.format(instance.project.id, filename)
-
-# PROJECT_TYPE = (
-#     ("Ministerial", "部级科研项目"),
-#     ("System Position", "国家现代农业产业技术体系岗位专家"),
-#     ("National KeyRD", "国家重点研发计划课题"),
-#     ("NSFC General ", "国家自然科学基金（面上项目）"),
-#     ("National Subtopic", "其他国家级项目（子课题）"),
-#     ("Provincial", "省级科研项目"),
-#     ("City", "市级科研项目"),
-#     ("Academy", "院级科研项目"),
-#     ("Institute", "所级基本科研业务费专项项目"),
-#     ("Other", "其他项目计划"),
-
-# )
-
-PROJECT_TYPE = (
-    ("JSFW", "技术服务"),
-    ("JSZX", "技术咨询"),   
-    ("JSKF", "技术开发（合作）"),
-    ("JSWT", "技术开发（委托）"),
-    ("JSZR", "技术转让（转让）"),
-    ("JSXK", "技术转让（许可）"),
-    ("OTHER", "其他"),
-)
-
-
-PRPJECT_STATUS = (
-    ("Ongoing", "在研"),
-    ("Conclusion", "结题"),
-)
-
+from django.contrib.auth.models import User
+from django.utils import timezone
+from organ.models import Organ, Staff
 
 class Project(models.Model):
-    num = models.CharField('项目编号',max_length=100,blank=True, null=True)
-    finance_num = models.CharField('财务编号',max_length=100,blank=True, null=True)
-    name = models.CharField('项目名称',max_length=100,unique=True)
-    project_type = models.CharField('项目类别',max_length=30,choices=PROJECT_TYPE,blank=True, null=True)
-    sign_date = models.DateField('签约日期',default=datetime.date.today,blank=True, null=True)
-    start_date = models.DateField('开始日期',default=datetime.date.today,blank=True, null=True)
-    end_date = models.DateField('计划结项日期',blank=True, null=True)
-    authorize_units = models.ForeignKey(Org,verbose_name='委托单位',on_delete=models.SET_NULL,blank=True,null=True)
-    source = models.CharField('资金来源',max_length=100,blank=True, null=True)
-    director = models.ForeignKey(Employee,verbose_name='项目负责人',blank=True, null=True,on_delete=models.SET_NULL,related_name='directors')
-    contract_fund = models.DecimalField('合同经费(万元)',max_digits=7, decimal_places=2,default=0)
-    support_fund = models.DecimalField('配套经费(万元)',max_digits=7, decimal_places=2)
-    out_fund = models.DecimalField('外拨经费(万元)',max_digits=7, decimal_places=2)
-    itself_fund = models.DecimalField('自筹经费(万元)',max_digits=7, decimal_places=2)
-    year = models.IntegerField('年度',default=current_year)
-    participant = models.ManyToManyField(Participant,verbose_name='项目参与人',through='Participantion',related_name='participants')
-    enter_year = models.IntegerField('登记年度',default=current_year,blank=True, null=True)
-    enter_info = models.CharField('登记情况',max_length=50,blank=True, null=True)
-    end_info = models.CharField('结项情况',max_length=50,blank=True, null=True)
-    doc_transfer = models.CharField('档案移交情况',max_length=50,blank=True, null=True)
-    context = models.TextField('备注',blank=True, null=True)
-
-
-    achievement_info = models.CharField('成果简介',max_length=50,blank=True, null=True)
+    PROJECT_STATUS_CHOICES = [
+        ('draft', '草稿'),
+        ('in_progress', '进行中'),
+        ('completed', '已完成'),
+        ('suspended', '已暂停'),
+        ('terminated', '已终止')
+    ]
     
-    status = models.CharField('项目状态',max_length=10,choices=PRPJECT_STATUS,default='Ongoing',blank=True, null=True)
+    STATUS_CHOICES = PROJECT_STATUS_CHOICES
+    
+    PROJECT_TYPES = [
+        ('research', '研究项目'),
+        ('development', '开发项目'),
+        ('consulting', '咨询项目'),
+        ('service', '服务项目'),
+        ('other', '其他项目')
+    ]
 
+    name = models.CharField('项目名称', max_length=200)
+    code = models.CharField('项目编号', max_length=50, unique=True)
+    project_type = models.CharField('项目类型', max_length=20, choices=PROJECT_TYPES, default='research')
+    description = models.TextField('项目描述', blank=True)
+    start_date = models.DateField('开始日期')
+    end_date = models.DateField('结束日期')
+    budget = models.DecimalField('预算金额', max_digits=12, decimal_places=2, default=0)
+    status = models.CharField('项目状态', max_length=20, choices=PROJECT_STATUS_CHOICES, default='draft')
+    lead_organ = models.ForeignKey(Organ, on_delete=models.PROTECT, related_name='lead_projects', verbose_name='主导单位')
+    partner_organs = models.ManyToManyField(Organ, related_name='partner_projects', blank=True, verbose_name='合作单位')
+    manager = models.ForeignKey(Staff, on_delete=models.PROTECT, related_name='managed_projects', verbose_name='项目负责人')
+    participants = models.ManyToManyField(Staff, through='ProjectParticipation', related_name='participated_projects', verbose_name='项目成员')
+    team_members = models.ManyToManyField(User, related_name='team_projects', blank=True, verbose_name='团队成员')
+    remarks = models.TextField('备注', blank=True)
+    is_archived = models.BooleanField('是否归档', default=False)
+    archived_at = models.DateTimeField('归档时间', null=True, blank=True)
+    archived_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, 
+                                  related_name='project_archived_projects', verbose_name='归档人')
+    archive_reason = models.TextField('归档原因', blank=True)
+    created_at = models.DateTimeField('创建时间', auto_now_add=True)
+    updated_at = models.DateTimeField('更新时间', auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True,
+                                 related_name='project_created_projects', verbose_name='创建人')
+
+    class Meta:
+        verbose_name = '项目'
+        verbose_name_plural = verbose_name
+        ordering = ['-created_at']
 
     def __str__(self):
         return self.name
 
-    class Meta:
-        verbose_name = '项目'
-        verbose_name_plural = '项目'
+    def archive(self, user, reason=''):
+        """归档项目"""
+        self.is_archived = True
+        self.archived_at = timezone.now()
+        self.archived_by = user
+        self.archive_reason = reason
+        self.save()
 
+    def unarchive(self):
+        """取消归档"""
+        self.is_archived = False
+        self.archived_at = None
+        self.archived_by = None
+        self.archive_reason = ''
+        self.save()
 
-class Participantion(models.Model):
+class ProjectParticipation(models.Model):
+    ROLE_CHOICES = [
+        ('manager', '项目负责人'),
+        ('leader', '课题负责人'),
+        ('member', '项目成员'),
+        ('consultant', '顾问专家'),
+        ('support', '支持人员')
+    ]
 
-    project = models.ForeignKey(
-        Project, on_delete=models.CASCADE, verbose_name='项目')
-
-    participant = models.ForeignKey(
-        Participant, on_delete=models.CASCADE, verbose_name='项目参与人')
-    order = models.IntegerField('项目参与顺序', default=0)
-
-    def __str__(self):
-        return "项目： {}, 项目参与人： {},项目参与顺序： {}".format(self.project.name, self.participant.name, self.order)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, verbose_name='项目')
+    staff = models.ForeignKey(Staff, on_delete=models.CASCADE, verbose_name='人员')
+    role = models.CharField('角色', max_length=20, choices=ROLE_CHOICES)
+    start_date = models.DateField('开始日期')
+    end_date = models.DateField('结束日期', null=True, blank=True)
+    workload = models.DecimalField('工作量（人月）', max_digits=5, decimal_places=2, null=True, blank=True)
+    responsibility = models.TextField('工作职责', blank=True)
+    performance = models.TextField('工作表现', blank=True)
+    is_active = models.BooleanField('是否在项目中', default=True)
+    created_at = models.DateTimeField('创建时间', auto_now_add=True)
+    updated_at = models.DateTimeField('更新时间', auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True,
+                                 verbose_name='创建人')
 
     class Meta:
         verbose_name = '项目参与'
-        verbose_name_plural = '项目参与'
-        unique_together = ('participant', 'project', 'order')  # 确保同一参与者在同一项目中参与顺序唯一
-
-
-class ProjectDoc(models.Model):
-    path = models.FileField(upload_to=project_directory_path,verbose_name='文件')
-    info = models.CharField('文件信息',max_length=255)
-    project = models.ForeignKey(Project,on_delete=models.DO_NOTHING,verbose_name="文件所属项目")
-
+        verbose_name_plural = verbose_name
+        unique_together = ['project', 'staff']
 
     def __str__(self):
-        return self.path
-
-    class Meta:
-        verbose_name='项目文档'
-        verbose_name_plural='项目文档'
+        return f'{self.project.name} - {self.staff.name} ({self.get_role_display()})'

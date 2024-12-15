@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}确认归档项目{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">确认归档项目</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <h4 class="alert-heading">请确认是否要归档以下项目？</h4>
+                <p>项目名称：{{ project.name }}</p>
+                <p>项目编号：{{ project.code }}</p>
+                <hr>
+                <p class="mb-0">归档后，项目将被标记为已完成状态，相关的预算和支出将被冻结。</p>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="reason" class="form-label">归档原因</label>
+                    <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
+                    <div class="form-text">请简要说明项目归档的原因</div>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <a href="{% url 'dashboard:project_detail' project.pk %}" class="btn btn-secondary me-2">取消</a>
+                    <button type="submit" class="btn btn-warning">确认归档</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

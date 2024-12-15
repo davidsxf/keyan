@@ -1,69 +1,30 @@
 from django.contrib import admin
-from .models import Org, Participant,Outsider,Department,Team,Employee,Student
+from .models import Organ, Department, Team, Staff
 
-from import_export.admin import ImportExportModelAdmin
+@admin.register(Organ)
+class OrganAdmin(admin.ModelAdmin):
+    list_display = ('name', 'code', 'organ_type', 'contact_person', 'contact_phone')
+    list_filter = ('organ_type',)
+    search_fields = ('name', 'code', 'contact_person')
 
-# Register your models here.
+@admin.register(Department)
+class DepartmentAdmin(admin.ModelAdmin):
+    list_display = ('name', 'code', 'organ', 'parent', 'director')
+    list_filter = ('organ',)
+    search_fields = ('name', 'code')
+    raw_id_fields = ('parent', 'director')
 
+@admin.register(Team)
+class TeamAdmin(admin.ModelAdmin):
+    list_display = ('name', 'code', 'department', 'leader')
+    list_filter = ('department__organ', 'department')
+    search_fields = ('name', 'code')
+    raw_id_fields = ('leader',)
 
-class OrgAdmin(ImportExportModelAdmin):
-
-    class Meta:
-        model = Org
-
-
-class OutsiderAdmin(ImportExportModelAdmin):
-
-    class Meta:
-        model = Outsider
-
-
-class DepartmentAdmin(ImportExportModelAdmin):
-
-    class Meta:
-        model = Department
-
-
-class TeamAdmin(ImportExportModelAdmin):
-
-    class Meta:
-        model = Team
-
-
-class EmployeeAdmin(ImportExportModelAdmin):
-    # 定制哪些字段需要展示
-
-    class Meta:
-        model = Employee
-
-
-class OrgAdmin(ImportExportModelAdmin):
-
-    search_fields = ['name']
-
-    list_display = ('id', 'name')
-
-    class Meta:
-        model = Org
-
-class ParticipantAdmin(ImportExportModelAdmin):
-      
-    search_fields = ['name']
-
-    list_display = ('id', 'name')
-    
-    class Meta:
-        model = Participant
-
-
-admin.site.register(Org, OrgAdmin)
-admin.site.register(Outsider, OutsiderAdmin)
-admin.site.register(Department, DepartmentAdmin)
-admin.site.register(Team, TeamAdmin)
-admin.site.register(Employee, EmployeeAdmin)
-admin.site.register(Student)
-
-
-
-
-admin.site.register(Participant, ParticipantAdmin)
+@admin.register(Staff)
+class StaffAdmin(admin.ModelAdmin):
+    list_display = ['name', 'organ', 'department', 'title', 'phone', 'email', 'is_active']
+    list_filter = ['organ', 'department', 'title', 'is_active']
+    search_fields = ['name', 'phone', 'email']
+    filter_horizontal = ['teams']
+    raw_id_fields = ['user', 'organ', 'department']

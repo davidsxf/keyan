@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col">
+            <!-- 合同基本信息 -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">合同详情</h5>
+                    <div>
+                        <a href="{% url 'admin:contact_contract_change' contract.id %}" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> 编辑合同
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th style="width: 150px;">合同编号：</th>
+                                    <td>{{ contract.contract_number }}</td>
+                                </tr>
+                                <tr>
+                                    <th>合同标题：</th>
+                                    <td>{{ contract.title }}</td>
+                                </tr>
+                                <tr>
+                                    <th>合同类型：</th>
+                                    <td>{{ contract.contract_type.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>关联项目：</th>
+                                    <td>{{ contract.project.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>合同金额：</th>
+                                    <td>{{ contract.amount }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th style="width: 150px;">甲方：</th>
+                                    <td>{{ contract.party_a.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>乙方：</th>
+                                    <td>{{ contract.party_b.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>开始日期：</th>
+                                    <td>{{ contract.start_date }}</td>
+                                </tr>
+                                <tr>
+                                    <th>结束日期：</th>
+                                    <td>{{ contract.end_date }}</td>
+                                </tr>
+                                <tr>
+                                    <th>状态：</th>
+                                    <td>{{ contract.get_status_display }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    {% if contract.content %}
+                    <div class="row mt-3">
+                        <div class="col">
+                            <h6>合同内容：</h6>
+                            <div class="border rounded p-3 bg-light">
+                                {{ contract.content|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if contract.remarks %}
+                    <div class="row mt-3">
+                        <div class="col">
+                            <h6>备注：</h6>
+                            <div class="border rounded p-3 bg-light">
+                                {{ contract.remarks|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if contract.attachment %}
+                    <div class="row mt-3">
+                        <div class="col">
+                            <h6>附件：</h6>
+                            <a href="{{ contract.attachment.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                <i class="fas fa-download"></i> 下载附件
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 合同事件记录 -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">事件记录</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>时间</th>
+                                    <th>事件类型</th>
+                                    <th>操作人</th>
+                                    <th>描述</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for event in events %}
+                                <tr>
+                                    <td>{{ event.created_at }}</td>
+                                    <td>{{ event.get_event_type_display }}</td>
+                                    <td>{{ event.operator.get_full_name|default:event.operator.username }}</td>
+                                    <td>{{ event.description }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">暂无事件记录</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

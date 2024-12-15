@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">编辑预算 - {{ budget.project.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.project.id_for_label }}" class="form-label">项目</label>
+                                    {{ form.project }}
+                                    {% if form.project.errors %}
+                                    <div class="invalid-feedback">{{ form.project.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ form.total_amount.id_for_label }}" class="form-label">总预算</label>
+                                    {{ form.total_amount }}
+                                    {% if form.total_amount.errors %}
+                                    <div class="invalid-feedback">{{ form.total_amount.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ form.equipment_amount.id_for_label }}" class="form-label">设备费</label>
+                                    {{ form.equipment_amount }}
+                                    {% if form.equipment_amount.errors %}
+                                    <div class="invalid-feedback">{{ form.equipment_amount.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ form.material_amount.id_for_label }}" class="form-label">材料费</label>
+                                    {{ form.material_amount }}
+                                    {% if form.material_amount.errors %}
+                                    <div class="invalid-feedback">{{ form.material_amount.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ form.test_amount.id_for_label }}" class="form-label">测试化验加工费</label>
+                                    {{ form.test_amount }}
+                                    {% if form.test_amount.errors %}
+                                    <div class="invalid-feedback">{{ form.test_amount.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ form.fuel_amount.id_for_label }}" class="form-label">燃料动力费</label>
+                                    {{ form.fuel_amount }}
+                                    {% if form.fuel_amount.errors %}
+                                    <div class="invalid-feedback">{{ form.fuel_amount.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.travel_amount.id_for_label }}" class="form-label">差旅费</label>
+                                    {{ form.travel_amount }}
+                                    {% if form.travel_amount.errors %}
+                                    <div class="invalid-feedback">{{ form.travel_amount.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ form.conference_amount.id_for_label }}" class="form-label">会议费</label>
+                                    {{ form.conference_amount }}
+                                    {% if form.conference_amount.errors %}
+                                    <div class="invalid-feedback">{{ form.conference_amount.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ form.international_amount.id_for_label }}" class="form-label">国际合作交流费</label>
+                                    {{ form.international_amount }}
+                                    {% if form.international_amount.errors %}
+                                    <div class="invalid-feedback">{{ form.international_amount.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ form.labor_amount.id_for_label }}" class="form-label">劳务费</label>
+                                    {{ form.labor_amount }}
+                                    {% if form.labor_amount.errors %}
+                                    <div class="invalid-feedback">{{ form.labor_amount.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ form.expert_amount.id_for_label }}" class="form-label">专家咨询费</label>
+                                    {{ form.expert_amount }}
+                                    {% if form.expert_amount.errors %}
+                                    <div class="invalid-feedback">{{ form.expert_amount.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ form.other_amount.id_for_label }}" class="form-label">其他费用</label>
+                                    {{ form.other_amount }}
+                                    {% if form.other_amount.errors %}
+                                    <div class="invalid-feedback">{{ form.other_amount.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ form.indirect_amount.id_for_label }}" class="form-label">间接费用</label>
+                                    {{ form.indirect_amount }}
+                                    {% if form.indirect_amount.errors %}
+                                    <div class="invalid-feedback">{{ form.indirect_amount.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">保存</button>
+                            <a href="{% url 'dashboard:budget_detail' budget.id %}" class="btn btn-secondary">返回</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

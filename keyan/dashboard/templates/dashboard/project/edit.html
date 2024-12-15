@@ -1,0 +1,340 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">编辑项目</h5>
+                    <div>
+                        <a href="{% url 'dashboard:project_detail' project.id %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> 返回详情
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- 基本信息 -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">基本信息</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <label for="code" class="col-sm-2 col-form-label">项目编号</label>
+                                    <div class="col-sm-4">
+                                        <input type="text" class="form-control" id="code" name="code" value="{{ project.code }}" required>
+                                        <div class="invalid-feedback">请输入项目编号</div>
+                                        <div class="form-text">项目编号必须唯一</div>
+                                    </div>
+                                    <label for="name" class="col-sm-2 col-form-label">项目名称</label>
+                                    <div class="col-sm-4">
+                                        <input type="text" class="form-control" id="name" name="name" value="{{ project.name }}" required>
+                                        <div class="invalid-feedback">请输入项目名称</div>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label for="project_type" class="col-sm-2 col-form-label">项目类型</label>
+                                    <div class="col-sm-4">
+                                        <select class="form-select" id="project_type" name="project_type" required>
+                                            <option value="">请选择项目类型</option>
+                                            {% for type_value, type_name in project_types %}
+                                            <option value="{{ type_value }}" {% if project.project_type == type_value %}selected{% endif %}>
+                                                {{ type_name }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="invalid-feedback">请选择项目类型</div>
+                                    </div>
+                                    <label for="status" class="col-sm-2 col-form-label">项目状态</label>
+                                    <div class="col-sm-4">
+                                        <select class="form-select" id="status" name="status" required>
+                                            <option value="">请选择项目状态</option>
+                                            {% for status_value, status_name in project_status %}
+                                            <option value="{{ status_value }}" {% if project.status == status_value %}selected{% endif %}>
+                                                {{ status_name }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="invalid-feedback">请选择项目状态</div>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label for="description" class="col-sm-2 col-form-label">项目描述</label>
+                                    <div class="col-sm-10">
+                                        <textarea class="form-control" id="description" name="description" rows="3" required>{{ project.description }}</textarea>
+                                        <div class="invalid-feedback">请输入项目描述</div>
+                                        <div class="form-text">请详细描述项目的目标、范围和主要内容</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 时间和预算 -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">时间和预算</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <label for="start_date" class="col-sm-2 col-form-label">开始日期</label>
+                                    <div class="col-sm-4">
+                                        <input type="date" class="form-control" id="start_date" name="start_date" 
+                                               value="{{ project.start_date|date:'Y-m-d' }}" required>
+                                        <div class="invalid-feedback">请选择开始日期</div>
+                                    </div>
+                                    <label for="end_date" class="col-sm-2 col-form-label">结束日期</label>
+                                    <div class="col-sm-4">
+                                        <input type="date" class="form-control" id="end_date" name="end_date" 
+                                               value="{{ project.end_date|date:'Y-m-d' }}" required>
+                                        <div class="invalid-feedback">请选择结束日期</div>
+                                        <div id="date-warning" class="text-danger" style="display: none;">
+                                            结束日期必须晚于开始日期
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label for="budget" class="col-sm-2 col-form-label">预算金额</label>
+                                    <div class="col-sm-4">
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="budget" name="budget" 
+                                                   step="0.01" value="{{ project.budget }}" required>
+                                            <span class="input-group-text">元</span>
+                                        </div>
+                                        <div class="invalid-feedback">请输入预算金额</div>
+                                        <div class="form-text">项目总预算金额</div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="alert alert-info mb-0">
+                                            <i class="fas fa-info-circle"></i> 已使用预算：
+                                            <strong>{{ project.used_budget|default:0 }}</strong> 元
+                                            ({{ project.budget_usage_percentage|default:0 }}%)
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 单位信息 -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">单位信息</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <label for="lead_organ" class="col-sm-2 col-form-label">主导单位</label>
+                                    <div class="col-sm-10">
+                                        <select class="form-select" id="lead_organ" name="lead_organ" required>
+                                            <option value="">请选择主导单位</option>
+                                            {% for organ in organs %}
+                                            <option value="{{ organ.id }}" 
+                                                    data-organ-type="{{ organ.organ_type }}"
+                                                    {% if project.lead_organ_id == organ.id %}selected{% endif %}>
+                                                {{ organ.name }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="invalid-feedback">请选择主导单位</div>
+                                        <div id="lead-organ-info" class="form-text mt-2" style="display: none;">
+                                            单位类型：<span id="lead-organ-type"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label for="partner_organs" class="col-sm-2 col-form-label">合作单位</label>
+                                    <div class="col-sm-10">
+                                        <select class="form-select" id="partner_organs" name="partner_organs" multiple>
+                                            {% for organ in organs %}
+                                            <option value="{{ organ.id }}" 
+                                                    data-organ-type="{{ organ.organ_type }}"
+                                                    {% if organ in project.partner_organs.all %}selected{% endif %}>
+                                                {{ organ.name }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="form-text">可以选择多个合作单位（按住Ctrl键多选）</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 负责人信息 -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">负责人信息</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <label for="manager" class="col-sm-2 col-form-label">项目负责人</label>
+                                    <div class="col-sm-10">
+                                        <select class="form-select" id="manager" name="manager" required>
+                                            <option value="">请选择项目负责人</option>
+                                            {% for staff in staffs %}
+                                            <option value="{{ staff.id }}" 
+                                                    data-department="{{ staff.department.name }}"
+                                                    data-title="{{ staff.get_title_display }}"
+                                                    {% if project.manager_id == staff.id %}selected{% endif %}>
+                                                {{ staff.name }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="invalid-feedback">请选择项目负责人</div>
+                                        <div id="manager-info" class="form-text mt-2" style="display: none;">
+                                            所属部门：<span id="manager-department"></span><br>
+                                            职称：<span id="manager-title"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 其他信息 -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">其他信息</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <label for="remarks" class="col-sm-2 col-form-label">备注</label>
+                                    <div class="col-sm-10">
+                                        <textarea class="form-control" id="remarks" name="remarks" rows="3">{{ project.remarks }}</textarea>
+                                        <div class="form-text">可以添加项目的补充说明、注意事项等</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12 text-center">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> 保存修改
+                                </button>
+                                <a href="{% url 'dashboard:project_detail' project.id %}" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> 取消
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// 表单验证
+(function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms)
+        .forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+            }, false)
+        })
+})()
+
+// 日期验证
+document.getElementById('end_date').addEventListener('change', function() {
+    var startDate = new Date(document.getElementById('start_date').value);
+    var endDate = new Date(this.value);
+    var warning = document.getElementById('date-warning');
+    
+    if (endDate < startDate) {
+        warning.style.display = 'block';
+        this.setCustomValidity('结束日期必须晚于开始日期');
+    } else {
+        warning.style.display = 'none';
+        this.setCustomValidity('');
+    }
+});
+
+// 主导单位信息显示
+document.getElementById('lead_organ').addEventListener('change', function() {
+    var selectedOption = this.options[this.selectedIndex];
+    var organInfo = document.getElementById('lead-organ-info');
+    var organType = document.getElementById('lead-organ-type');
+    
+    if (this.value) {
+        organInfo.style.display = 'block';
+        organType.textContent = selectedOption.dataset.organType;
+    } else {
+        organInfo.style.display = 'none';
+    }
+});
+
+// 项目负责人信息显示
+document.getElementById('manager').addEventListener('change', function() {
+    var selectedOption = this.options[this.selectedIndex];
+    var managerInfo = document.getElementById('manager-info');
+    var managerDepartment = document.getElementById('manager-department');
+    var managerTitle = document.getElementById('manager-title');
+    
+    if (this.value) {
+        managerInfo.style.display = 'block';
+        managerDepartment.textContent = selectedOption.dataset.department;
+        managerTitle.textContent = selectedOption.dataset.title;
+    } else {
+        managerInfo.style.display = 'none';
+    }
+});
+
+// 初始化Select2
+$(document).ready(function() {
+    $('#lead_organ').select2({
+        placeholder: '请选择主导单位',
+        allowClear: true,
+        width: '100%'
+    });
+
+    $('#partner_organs').select2({
+        placeholder: '请选择合作单位',
+        allowClear: true,
+        width: '100%'
+    });
+
+    $('#manager').select2({
+        placeholder: '请选择项目负责人',
+        allowClear: true,
+        width: '100%'
+    }).on('select2:select', function(e) {
+        var selectedOption = $(this).find('option:selected');
+        var managerInfo = $('#manager-info');
+        var managerDepartment = $('#manager-department');
+        var managerTitle = $('#manager-title');
+        
+        managerInfo.show();
+        managerDepartment.text(selectedOption.data('department'));
+        managerTitle.text(selectedOption.data('title'));
+    }).on('select2:unselect', function() {
+        $('#manager-info').hide();
+    });
+    
+    // 初始化显示主导单位信息
+    var leadOrgan = document.getElementById('lead_organ');
+    if (leadOrgan.value) {
+        var selectedOption = leadOrgan.options[leadOrgan.selectedIndex];
+        document.getElementById('lead-organ-info').style.display = 'block';
+        document.getElementById('lead-organ-type').textContent = selectedOption.dataset.organType;
+    }
+    
+    // 初始化显示负责人信息
+    var manager = document.getElementById('manager');
+    if (manager.value) {
+        var selectedOption = manager.options[manager.selectedIndex];
+        document.getElementById('manager-info').style.display = 'block';
+        document.getElementById('manager-department').textContent = selectedOption.dataset.department;
+        document.getElementById('manager-title').textContent = selectedOption.dataset.title;
+    }
+});
+</script>
+{% endblock %}
+{% endblock %} 

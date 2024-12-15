@@ -1,0 +1,288 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}合同统计分析{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- 页面标题 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">合同统计分析</h1>
+        <div>
+            <button class="btn btn-primary" onclick="exportData()">
+                <i class="fas fa-download"></i> 导出数据
+            </button>
+        </div>
+    </div>
+
+    <!-- 筛选器 -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" id="filterForm">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">时间范围</label>
+                        <select class="form-select" name="time_range" onchange="this.form.submit()">
+                            <option value="7" {% if time_range == '7' %}selected{% endif %}>最近7天</option>
+                            <option value="30" {% if time_range == '30' %}selected{% endif %}>最近30天</option>
+                            <option value="90" {% if time_range == '90' %}selected{% endif %}>最近90天</option>
+                            <option value="365" {% if time_range == '365' %}selected{% endif %}>最近一年</option>
+                            <option value="custom" {% if time_range == 'custom' %}selected{% endif %}>自定义</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">合同类型</label>
+                        <select class="form-select" name="contract_type" onchange="this.form.submit()">
+                            <option value="">全部类型</option>
+                            {% for type in contract_types %}
+                            <option value="{{ type.id }}" {% if selected_type == type.id %}selected{% endif %}>
+                                {{ type.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">状态</label>
+                        <select class="form-select" name="status" onchange="this.form.submit()">
+                            <option value="">全部状态</option>
+                            {% for value, label in status_choices %}
+                            <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">金额范围</label>
+                        <select class="form-select" name="amount_range" onchange="this.form.submit()">
+                            <option value="">全部金额</option>
+                            <option value="0-100000" {% if amount_range == '0-100000' %}selected{% endif %}>10万以下</option>
+                            <option value="100000-500000" {% if amount_range == '100000-500000' %}selected{% endif %}>10-50万</option>
+                            <option value="500000-1000000" {% if amount_range == '500000-1000000' %}selected{% endif %}>50-100万</option>
+                            <option value="1000000+" {% if amount_range == '1000000+' %}selected{% endif %}>100万以上</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 统计��片 -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-muted">合同总数</h6>
+                            <h3 class="mb-0">{{ total_contracts }}</h3>
+                        </div>
+                        <div class="text-primary">
+                            <i class="fas fa-file-contract fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-muted">合同总金额</h6>
+                            <h3 class="mb-0">¥{{ total_amount|floatformat:2 }}</h3>
+                        </div>
+                        <div class="text-success">
+                            <i class="fas fa-yen-sign fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-muted">本月新增</h6>
+                            <h3 class="mb-0">{{ monthly_new }}</h3>
+                        </div>
+                        <div class="text-info">
+                            <i class="fas fa-chart-line fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-muted">待审核</h6>
+                            <h3 class="mb-0">{{ pending_review }}</h3>
+                        </div>
+                        <div class="text-warning">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图表展示 -->
+    <div class="row">
+        <!-- 合同类型分布 -->
+        <div class="col-xl-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">合同类型分布</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="contractTypeChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 合同金额趋势 -->
+        <div class="col-xl-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">合同金额趋势</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="contractAmountChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 合同状态分布 -->
+        <div class="col-xl-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">合同状态分布</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="contractStatusChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 项目合同分布 -->
+        <div class="col-xl-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">项目合同分布</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="projectContractChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.card {
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+.card:hover {
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// 合同类型分布图
+const typeCtx = document.getElementById('contractTypeChart').getContext('2d');
+new Chart(typeCtx, {
+    type: 'pie',
+    data: {
+        labels: {{ type_labels|safe }},
+        datasets: [{
+            data: {{ type_data|safe }},
+            backgroundColor: [
+                '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+
+// 合同金额趋势图
+const amountCtx = document.getElementById('contractAmountChart').getContext('2d');
+new Chart(amountCtx, {
+    type: 'line',
+    data: {
+        labels: {{ amount_labels|safe }},
+        datasets: [{
+            label: '合同���额',
+            data: {{ amount_data|safe }},
+            borderColor: '#4e73df',
+            tension: 0.1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+
+// 合同状态分布图
+const statusCtx = document.getElementById('contractStatusChart').getContext('2d');
+new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: {{ status_labels|safe }},
+        datasets: [{
+            data: {{ status_data|safe }},
+            backgroundColor: [
+                '#1cc88a', '#f6c23e', '#4e73df', '#e74a3b', '#858796'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+
+// 项目合同分布图
+const projectCtx = document.getElementById('projectContractChart').getContext('2d');
+new Chart(projectCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ project_labels|safe }},
+        datasets: [{
+            label: '合同数量',
+            data: {{ project_data|safe }},
+            backgroundColor: '#4e73df'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// 导出数据功能
+function exportData() {
+    const params = new URLSearchParams(window.location.search);
+    window.location.href = `{% url 'dashboard:contract_export' %}?${params.toString()}`;
+}
+</script>
+{% endblock %} 

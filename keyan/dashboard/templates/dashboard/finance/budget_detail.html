@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% load dashboard_extras %}
+{% load static %}
+
+{% block title %}预算详情{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">{{ budget.project.name }} - 预算详情</h1>
+        <div>
+            <a href="{% url 'dashboard:income_list' %}?project={{ budget.project.id }}" class="btn btn-success">
+                <i class="fas fa-plus-circle"></i> 项目收入
+            </a>
+            <a href="{% url 'dashboard:expense_list' %}?project={{ budget.project.id }}" class="btn btn-info">
+                <i class="fas fa-minus-circle"></i> 项目支出
+            </a>
+            <a href="{% url 'dashboard:budget_edit' budget.pk %}" class="btn btn-warning">
+                <i class="fas fa-edit"></i> 编辑预算
+            </a>
+            <a href="{% url 'dashboard:budget_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> 返回列表
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- 预算概览 -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">预算概览</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h6 class="mb-2">总预算</h6>
+                        <h2 class="mb-0">¥{{ budget.total_amount|floatformat:2 }}</h2>
+                    </div>
+                    <div class="mb-4">
+                        <h6 class="mb-2">已使用金额</h6>
+                        <h3 class="text-danger mb-0">¥{{ budget.get_used_amount|floatformat:2 }}</h3>
+                    </div>
+                    <div class="mb-4">
+                        <h6 class="mb-2">剩余金额</h6>
+                        <h3 class="text-success mb-0">¥{{ budget.get_remaining_amount|floatformat:2 }}</h3>
+                    </div>
+                    <div>
+                        <h6 class="mb-2">使用进度</h6>
+                        {% with usage_rate=budget.get_used_amount|div:budget.total_amount|percentage %}
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar {% if usage_rate > 90 %}bg-danger{% elif usage_rate > 70 %}bg-warning{% else %}bg-success{% endif %}"
+                                 role="progressbar"
+                                 style="width: {{ usage_rate }}%"
+                                 aria-valuenow="{{ usage_rate }}"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100">{{ usage_rate|floatformat:1 }}%</div>
+                        </div>
+                        {% endwith %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 预算分配 -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">预算分配明细</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>预算项目</th>
+                                    <th>预算金额</th>
+                                    <th>已使用</th>
+                                    <th>剩余</th>
+                                    <th>使用率</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>设备费</td>
+                                    <td>¥{{ budget.equipment_amount|floatformat:2 }}</td>
+                                    <td>¥{{ budget.equipment_used|default:0|floatformat:2 }}</td>
+                                    <td>¥{{ budget.equipment_remaining|floatformat:2 }}</td>
+                                    <td>
+                                        <div class="progress">
+                                            <div class="progress-bar" role="progressbar" style="width: {{ budget.equipment_usage_rate }}%">
+                                                {{ budget.equipment_usage_rate|floatformat:1 }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- 其他预算项目类似... -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 最近支出记录 -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">最近支出记录</h5>
+            <a href="{% url 'dashboard:expense_list' %}?project={{ budget.project.id }}" class="btn btn-primary btn-sm">
+                查看全部
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>日期</th>
+                            <th>类型</th>
+                            <th>金额</th>
+                            <th>说明</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for expense in recent_expenses %}
+                        <tr>
+                            <td>{{ expense.date|date:"Y-m-d" }}</td>
+                            <td>{{ expense.get_category_display }}</td>
+                            <td>¥{{ expense.amount|floatformat:2 }}</td>
+                            <td>{{ expense.description|truncatechars:30 }}</td>
+                            <td>
+                                <span class="badge {% if expense.status == 'approved' %}bg-success{% elif expense.status == 'rejected' %}bg-danger{% else %}bg-warning{% endif %}">
+                                    {{ expense.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'dashboard:expense_detail' expense.pk %}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">暂无支出记录</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 预算变更记录 -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">预算变更记录</h5>
+        </div>
+        <div class="card-body">
+            <div class="timeline">
+                {% for change in budget_changes %}
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <h6 class="mb-1">{{ change.created_at|date:"Y-m-d H:i" }}</h6>
+                        <p class="mb-0">{{ change.description }}</p>
+                        <small class="text-muted">操作人：{{ change.created_by.get_full_name|default:change.created_by.username }}</small>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-center text-muted">暂无变更记录</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.timeline {
+    position: relative;
+    padding: 20px 0;
+}
+
+.timeline-item {
+    position: relative;
+    padding-left: 40px;
+    margin-bottom: 20px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: #007bff;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 3px #007bff;
+}
+
+.timeline-item:not(:last-child):before {
+    content: '';
+    position: absolute;
+    left: 9px;
+    top: 20px;
+    height: calc(100% + 20px);
+    width: 2px;
+    background-color: #007bff;
+}
+
+.timeline-content {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+</style>
+{% endblock %} 

@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if income %}编辑收入{% else %}新建收入{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">{% if income %}编辑收入{% else %}新建收入{% endif %}</h1>
+        <a href="{% if income %}{% url 'dashboard:income_detail' income.pk %}{% else %}{% url 'dashboard:income_list' %}{% endif %}" class="btn btn-secondary">
+            <i class="fas fa-times"></i> 取消
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <!-- 基本信息 -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="project" class="form-label">项目 <span class="text-danger">*</span></label>
+                            {% if income %}
+                            <input type="text" class="form-control" value="{{ income.project.name }}" readonly>
+                            <input type="hidden" name="project" value="{{ income.project.id }}">
+                            {% else %}
+                            <select class="form-select" id="project" name="project" required>
+                                <option value="">请选择项目</option>
+                                {% for project in projects %}
+                                <option value="{{ project.id }}" {% if project.id == income.project.id %}selected{% endif %}>
+                                    {{ project.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">请选择项目</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="category" class="form-label">收入类型 <span class="text-danger">*</span></label>
+                            <select class="form-select" id="category" name="category" required>
+                                <option value="">请选择收入类型</option>
+                                {% for value, label in income_categories %}
+                                <option value="{{ value }}" {% if value == income.category %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">请选择收入类型</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">金额 <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">¥</span>
+                                <input type="number" class="form-control" id="amount" name="amount" 
+                                       value="{{ income.amount|default:'' }}" step="0.01" min="0" required>
+                                <div class="invalid-feedback">请输入有效的金额</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="date" class="form-label">收入日期 <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="date" name="date" 
+                                   value="{{ income.date|date:'Y-m-d' }}" required>
+                            <div class="invalid-feedback">请选择收入日期</div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label for="description" class="form-label">说明 <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="description" name="description" 
+                                      rows="3" required>{{ income.description }}</textarea>
+                            <div class="invalid-feedback">请输入说明</div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label for="remarks" class="form-label">备注</label>
+                            <textarea class="form-control" id="remarks" name="remarks" 
+                                      rows="3">{{ income.remarks }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 附件信息 -->
+                <div class="mb-4">
+                    <h5 class="mb-3">附件</h5>
+                    {% if income and income.attachment %}
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-file fa-2x me-3"></i>
+                            <div>
+                                <h6 class="mb-1">{{ income.attachment.name|split:"/"|last }}</h6>
+                                <div class="btn-group">
+                                    <a href="{{ income.attachment.url }}" class="btn btn-sm btn-primary" target="_blank">
+                                        <i class="fas fa-download"></i> 下载
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAttachmentModal">
+                                        <i class="fas fa-trash"></i> 删除
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <label for="attachment" class="form-label">上传新附件</label>
+                        <input type="file" class="form-control" id="attachment" name="attachment">
+                        <div class="form-text">支持的文件格式：PDF、Word、Excel、图片等</div>
+                    </div>
+                </div>
+
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 保存
+                    </button>
+                    <a href="{% if income %}{% url 'dashboard:income_detail' income.pk %}{% else %}{% url 'dashboard:income_list' %}{% endif %}" 
+                       class="btn btn-secondary">
+                        <i class="fas fa-times"></i> 取消
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 删除附件确认模态框 -->
+{% if income and income.attachment %}
+<div class="modal fade" id="deleteAttachmentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">删除附件</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'dashboard:income_delete_attachment' income.pk %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>确认要删除当前附件吗？此操作不可恢复。</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-danger">确认删除</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // 表单验证
+    (function() {
+        'use strict'
+        var forms = document.querySelectorAll('.needs-validation')
+        Array.prototype.slice.call(forms)
+            .forEach(function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                })
+            })
+    })()
+
+    // 文件上传预览
+    $('#attachment').change(function() {
+        var file = this.files[0];
+        if (file) {
+            var fileName = file.name;
+            var fileSize = (file.size / 1024 / 1024).toFixed(2); // Convert to MB
+            
+            if (fileSize > 10) { // 10MB limit
+                alert('文件大小不能超过10MB');
+                this.value = '';
+                return;
+            }
+            
+            // 可以在这里添加文件类型验证
+            var allowedTypes = ['application/pdf', 'application/msword', 
+                              'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                              'application/vnd.ms-excel',
+                              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                              'image/jpeg', 'image/png'];
+            
+            if (!allowedTypes.includes(file.type)) {
+                alert('不支持的文件类型');
+                this.value = '';
+                return;
+            }
+        }
+    });
+});
+</script>
+{% endblock %} 

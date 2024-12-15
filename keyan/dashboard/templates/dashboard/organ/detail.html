@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col">
+            <!-- 机构基本信息 -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">机构信息</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>机构名称：</strong>{{ organ.name }}</p>
+                            <p><strong>机构代码：</strong>{{ organ.code }}</p>
+                            <p><strong>机构类型：</strong>{{ organ.get_organ_type_display }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>联系人：</strong>{{ organ.contact_person }}</p>
+                            <p><strong>联系电话：</strong>{{ organ.contact_phone }}</p>
+                            <p><strong>邮箱：</strong>{{ organ.email }}</p>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col">
+                            <p><strong>地址：</strong>{{ organ.address }}</p>
+                            <p><strong>描述：</strong>{{ organ.description }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 主导项目 -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">主导项目</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>项目编号</th>
+                                    <th>项目名称</th>
+                                    <th>项目类型</th>
+                                    <th>状态</th>
+                                    <th>开始日期</th>
+                                    <th>结束日期</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for project in lead_projects %}
+                                <tr>
+                                    <td>{{ project.code }}</td>
+                                    <td>{{ project.name }}</td>
+                                    <td>{{ project.get_project_type_display }}</td>
+                                    <td>{{ project.get_status_display }}</td>
+                                    <td>{{ project.start_date }}</td>
+                                    <td>{{ project.end_date }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">暂无主导项目</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 参与项目 -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">参与项目</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>项目���号</th>
+                                    <th>项目名称</th>
+                                    <th>项目类型</th>
+                                    <th>状态</th>
+                                    <th>开始日期</th>
+                                    <th>结束日期</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for project in partner_projects %}
+                                <tr>
+                                    <td>{{ project.code }}</td>
+                                    <td>{{ project.name }}</td>
+                                    <td>{{ project.get_project_type_display }}</td>
+                                    <td>{{ project.get_status_display }}</td>
+                                    <td>{{ project.start_date }}</td>
+                                    <td>{{ project.end_date }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">暂无参与项目</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 作为甲方的合同 -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">作为甲方的合同</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>合同编号</th>
+                                    <th>合同标题</th>
+                                    <th>合同类型</th>
+                                    <th>乙方</th>
+                                    <th>金额</th>
+                                    <th>状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for contract in party_a_contracts %}
+                                <tr>
+                                    <td>{{ contract.contract_number }}</td>
+                                    <td>{{ contract.title }}</td>
+                                    <td>{{ contract.contract_type.name }}</td>
+                                    <td>{{ contract.party_b.name }}</td>
+                                    <td>{{ contract.amount }}</td>
+                                    <td>{{ contract.get_status_display }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">暂无作为甲方的合同</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 作为乙方的合同 -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">作为乙方的合同</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>合同编号</th>
+                                    <th>合同标题</th>
+                                    <th>合同类型</th>
+                                    <th>甲方</th>
+                                    <th>金额</th>
+                                    <th>状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for contract in party_b_contracts %}
+                                <tr>
+                                    <td>{{ contract.contract_number }}</td>
+                                    <td>{{ contract.title }}</td>
+                                    <td>{{ contract.contract_type.name }}</td>
+                                    <td>{{ contract.party_a.name }}</td>
+                                    <td>{{ contract.amount }}</td>
+                                    <td>{{ contract.get_status_display }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">暂无作为乙方的合同</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

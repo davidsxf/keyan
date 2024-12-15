@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col">
+            <!-- 项目基本信息 -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">项目信息</h5>
+                    <div>
+                        {% if project.is_archived %}
+                        <a href="{% url 'dashboard:project_unarchive' project.pk %}" class="btn btn-warning">
+                            <i class="fas fa-box-open"></i> 取消归档
+                        </a>
+                        {% else %}
+                        <a href="{% url 'dashboard:project_archive' project.pk %}" class="btn btn-warning">
+                            <i class="fas fa-archive"></i> 归档项目
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'dashboard:project_participants' project.id %}" class="btn btn-primary">
+                            <i class="fas fa-users"></i> 项目成员管理
+                        </a>
+                        <a href="{% url 'dashboard:project_edit' project.id %}" class="btn btn-secondary">
+                            <i class="fas fa-edit"></i> 编辑项目
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>项目名称：</strong>{{ project.name }}</p>
+                            <p><strong>项目编号：</strong>{{ project.code }}</p>
+                            <p><strong>项目类型：</strong>{{ project.get_project_type_display }}</p>
+                            <p><strong>项目状态：</strong>{{ project.get_status_display }}</p>
+                            <p><strong>预算金额：</strong>{{ project.budget }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>开始日期：</strong>{{ project.start_date }}</p>
+                            <p><strong>结束日期：</strong>{{ project.end_date }}</p>
+                            <p><strong>主导单位：</strong>{{ project.lead_organ.name }}</p>
+                            <p><strong>项目负责人：</strong>{{ project.manager.name }}</p>
+                            <p><strong>创建时间：</strong>{{ project.created_at }}</p>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col">
+                            <p><strong>项目描述：</strong></p>
+                            <p>{{ project.description|linebreaks }}</p>
+                            <p><strong>备注：</strong></p>
+                            <p>{{ project.remarks|linebreaks }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 项目成员 -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">项目成员</h5>
+                    <div>
+                        <a href="{% url 'dashboard:project_participants' project.id %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-users"></i> 管理成员
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>姓名</th>
+                                    <th>部门</th>
+                                    <th>角色</th>
+                                    <th>开始日期</th>
+                                    <th>状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for participation in project.projectparticipation_set.select_related.all %}
+                                <tr>
+                                    <td>{{ participation.staff.name }}</td>
+                                    <td>{{ participation.staff.department.name|default:'-' }}</td>
+                                    <td>{{ participation.get_role_display }}</td>
+                                    <td>{{ participation.start_date }}</td>
+                                    <td>
+                                        {% if participation.is_active %}
+                                        <span class="badge bg-success">在项目中</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">已退出</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">暂无项目成员</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 合作单位 -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">合作单位</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>机构代码</th>
+                                    <th>机构名称</th>
+                                    <th>机构类型</th>
+                                    <th>联系人</th>
+                                    <th>联系电话</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for organ in project.partner_organs.all %}
+                                <tr>
+                                    <td>{{ organ.code }}</td>
+                                    <td>{{ organ.name }}</td>
+                                    <td>{{ organ.get_organ_type_display }}</td>
+                                    <td>{{ organ.contact_person }}</td>
+                                    <td>{{ organ.contact_phone }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">暂无合作单位</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 项目团队 -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">项目团队</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>用户名</th>
+                                    <th>姓名</th>
+                                    <th>邮箱</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for member in project.team_members.all %}
+                                <tr>
+                                    <td>{{ member.username }}</td>
+                                    <td>{{ member.get_full_name }}</td>
+                                    <td>{{ member.email }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">暂无团队成员</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 相关合同 -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">相关合同</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>合同编号</th>
+                                    <th>合同标题</th>
+                                    <th>合同类型</th>
+                                    <th>甲方</th>
+                                    <th>乙方</th>
+                                    <th>金额</th>
+                                    <th>状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for contract in contracts %}
+                                <tr>
+                                    <td>{{ contract.contract_number }}</td>
+                                    <td>{{ contract.title }}</td>
+                                    <td>{{ contract.contract_type.name }}</td>
+                                    <td>{{ contract.party_a.name }}</td>
+                                    <td>{{ contract.party_b.name }}</td>
+                                    <td>{{ contract.amount }}</td>
+                                    <td>{{ contract.get_status_display }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center">暂无相关合同</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

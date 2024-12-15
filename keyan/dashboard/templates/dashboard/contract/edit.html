@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">编辑合同</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="needs-validation" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+                        <div class="row mb-3">
+                            <label for="contract_number" class="col-sm-2 col-form-label">合同编号</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="contract_number" name="contract_number" value="{{ contract.contract_number }}" required>
+                                <div class="invalid-feedback">
+                                    请输入合同编号
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="title" class="col-sm-2 col-form-label">合同标题</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="title" name="title" value="{{ contract.title }}" required>
+                                <div class="invalid-feedback">
+                                    请输入合同标题
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="contract_type" class="col-sm-2 col-form-label">合同类型</label>
+                            <div class="col-sm-10">
+                                <select class="form-select" id="contract_type" name="contract_type" required>
+                                    <option value="">请选择合同类型</option>
+                                    {% for type in contract_types %}
+                                    <option value="{{ type.id }}" {% if contract.contract_type_id == type.id %}selected{% endif %}>
+                                        {{ type.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">
+                                    请选择合同类型
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="project" class="col-sm-2 col-form-label">关联项目</label>
+                            <div class="col-sm-10">
+                                <select class="form-select" id="project" name="project" required>
+                                    <option value="">请选择关联项目</option>
+                                    {% for proj in projects %}
+                                    <option value="{{ proj.id }}" {% if contract.project_id == proj.id %}selected{% endif %}>
+                                        {{ proj.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">
+                                    请选择关联项目
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="party_a" class="col-sm-2 col-form-label">甲方</label>
+                            <div class="col-sm-10">
+                                <select class="form-select" id="party_a" name="party_a" required>
+                                    <option value="">请选择甲方</option>
+                                    {% for organ in organs %}
+                                    <option value="{{ organ.id }}" {% if contract.party_a_id == organ.id %}selected{% endif %}>
+                                        {{ organ.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">
+                                    请选择甲方
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="party_b" class="col-sm-2 col-form-label">乙方</label>
+                            <div class="col-sm-10">
+                                <select class="form-select" id="party_b" name="party_b" required>
+                                    <option value="">请选择乙方</option>
+                                    {% for organ in organs %}
+                                    <option value="{{ organ.id }}" {% if contract.party_b_id == organ.id %}selected{% endif %}>
+                                        {{ organ.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">
+                                    请选择乙方
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="amount" class="col-sm-2 col-form-label">合同金额</label>
+                            <div class="col-sm-10">
+                                <input type="number" class="form-control" id="amount" name="amount" step="0.01" value="{{ contract.amount }}" required>
+                                <div class="invalid-feedback">
+                                    请输入合同金额
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="start_date" class="col-sm-2 col-form-label">开始日期</label>
+                            <div class="col-sm-10">
+                                <input type="date" class="form-control" id="start_date" name="start_date" value="{{ contract.start_date|date:'Y-m-d' }}" required>
+                                <div class="invalid-feedback">
+                                    请选择开始日期
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="end_date" class="col-sm-2 col-form-label">结束日期</label>
+                            <div class="col-sm-10">
+                                <input type="date" class="form-control" id="end_date" name="end_date" value="{{ contract.end_date|date:'Y-m-d' }}" required>
+                                <div class="invalid-feedback">
+                                    请选择结束日期
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="status" class="col-sm-2 col-form-label">合同状态</label>
+                            <div class="col-sm-10">
+                                <select class="form-select" id="status" name="status" required>
+                                    {% for status_value, status_name in contract_status %}
+                                    <option value="{{ status_value }}" {% if contract.status == status_value %}selected{% endif %}>
+                                        {{ status_name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">
+                                    请选择合同状态
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="content" class="col-sm-2 col-form-label">合同内容</label>
+                            <div class="col-sm-10">
+                                <textarea class="form-control" id="content" name="content" rows="4">{{ contract.content }}</textarea>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="attachment" class="col-sm-2 col-form-label">附件</label>
+                            <div class="col-sm-10">
+                                <input type="file" class="form-control" id="attachment" name="attachment">
+                                {% if contract.attachment %}
+                                <div class="mt-2">
+                                    <a href="{{ contract.attachment.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-download"></i> 下载当前附件
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="responsible_person" class="col-sm-2 col-form-label">负责人</label>
+                            <div class="col-sm-10">
+                                <select class="form-select" id="responsible_person" name="responsible_person" required>
+                                    <option value="">请选择负责人</option>
+                                    {% for user in users %}
+                                    <option value="{{ user.id }}" {% if contract.responsible_person_id == user.id %}selected{% endif %}>
+                                        {{ user.get_full_name|default:user.username }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">
+                                    请选择负责人
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="remarks" class="col-sm-2 col-form-label">备注</label>
+                            <div class="col-sm-10">
+                                <textarea class="form-control" id="remarks" name="remarks" rows="3">{{ contract.remarks }}</textarea>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-10 offset-sm-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> 保存
+                                </button>
+                                <a href="{% url 'dashboard:contract_detail' contract.id %}" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> 取消
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// 表单验证
+(function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms)
+        .forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+            }, false)
+        })
+})()
+</script>
+{% endblock %}
+{% endblock %} 

@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">添加项目成员</h5>
+                    <div>
+                        <a href="{% url 'dashboard:project_participants' project.id %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> 返回
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <label class="col-sm-2 col-form-label">项目名称</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" value="{{ project.name }}" readonly>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="staff" class="col-sm-2 col-form-label">选择人员</label>
+                            <div class="col-sm-10">
+                                <select class="form-select" id="staff" name="staff" required>
+                                    <option value="">请选择人员</option>
+                                    {% for staff in available_staff %}
+                                    <option value="{{ staff.id }}" data-department="{{ staff.department.name|default:'' }}" data-title="{{ staff.get_title_display|default:'' }}">
+                                        {{ staff.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">
+                                    请选择人员
+                                </div>
+                                <div id="staffInfo" class="form-text mt-2" style="display: none;">
+                                    部门：<span id="departmentInfo"></span><br>
+                                    职称：<span id="titleInfo"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="role" class="col-sm-2 col-form-label">项目角色</label>
+                            <div class="col-sm-10">
+                                <select class="form-select" id="role" name="role" required>
+                                    <option value="">请选择角色</option>
+                                    {% for role, name in role_choices %}
+                                    <option value="{{ role }}">{{ name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">
+                                    请选择项目角色
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="start_date" class="col-sm-2 col-form-label">开始日期</label>
+                            <div class="col-sm-10">
+                                <input type="date" class="form-control" id="start_date" name="start_date" required>
+                                <div class="invalid-feedback">
+                                    请选择开始日期
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="end_date" class="col-sm-2 col-form-label">结束日期</label>
+                            <div class="col-sm-10">
+                                <input type="date" class="form-control" id="end_date" name="end_date">
+                                <div class="form-text">如果不确定结束日期，可以留空</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="workload" class="col-sm-2 col-form-label">工作量（人月）</label>
+                            <div class="col-sm-10">
+                                <input type="number" class="form-control" id="workload" name="workload" step="0.1" min="0">
+                                <div class="form-text">预计投入的工作量，可以留空</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="responsibility" class="col-sm-2 col-form-label">工作职责</label>
+                            <div class="col-sm-10">
+                                <textarea class="form-control" id="responsibility" name="responsibility" rows="3"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-10 offset-sm-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> 保存
+                                </button>
+                                <a href="{% url 'dashboard:project_participants' project.id %}" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> 取消
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// 表单验证
+(function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms)
+        .forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+            }, false)
+        })
+})()
+
+// 显示人员信息
+document.getElementById('staff').addEventListener('change', function() {
+    var selectedOption = this.options[this.selectedIndex];
+    var staffInfo = document.getElementById('staffInfo');
+    var departmentInfo = document.getElementById('departmentInfo');
+    var titleInfo = document.getElementById('titleInfo');
+    
+    if (this.value) {
+        staffInfo.style.display = 'block';
+        departmentInfo.textContent = selectedOption.dataset.department || '未分配';
+        titleInfo.textContent = selectedOption.dataset.title || '未设置';
+    } else {
+        staffInfo.style.display = 'none';
+    }
+});
+
+// 日期验证
+document.getElementById('end_date').addEventListener('change', function() {
+    var startDate = document.getElementById('start_date').value;
+    var endDate = this.value;
+    
+    if (startDate && endDate && endDate < startDate) {
+        alert('结束日期不能早于开始日期');
+        this.value = '';
+    }
+});
+</script>
+{% endblock %}
+{% endblock %} 
