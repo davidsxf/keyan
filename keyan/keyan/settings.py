@@ -32,7 +32,7 @@ DEBUG = bool(os.environ.get("DEBUG", default=1))
 
 # Allow hosts to be set by environment variable
 # ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ") if os.environ.get("DJANGO_ALLOWED_HOSTS") else []
-ALLOWED_HOSTS = ['172.21.25.140', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['*']
 
 
 
