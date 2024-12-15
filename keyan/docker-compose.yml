@@ -11,8 +11,8 @@ services:
       - ./media:/app/media  # 媒体文件
     environment:
       - DEBUG=0
-      - SECRET_KEY=your-secret-key-here
-      - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,[your-domain-or-ip]
+      - SECRET_KEY=prfri1324
+      - DJANGO_ALLOWED_HOSTS=['*']
     ports:
       - "8000:8000"
 
