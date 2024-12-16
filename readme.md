@@ -19,3 +19,8 @@ services:
 
 volumes:
   postgres_data:
+
+
+
+  # 重新构建并启动所有服务
+docker-compose up --build -d

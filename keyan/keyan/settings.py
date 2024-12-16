@@ -168,3 +168,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # 开发环境
 # EMAIL_HOST_USER = 'your-email@example.com'
 # EMAIL_HOST_PASSWORD = 'your-password'
 
+# DingTalk Configuration
+DINGTALK_APP_KEY = os.environ.get('DINGTALK_APP_KEY', 'dinghhazdkfsozpvupbm')
+DINGTALK_APP_SECRET = os.environ.get('DINGTALK_APP_SECRET', 'ZFcHvj7ynCMEgeiupSxScGiCjxZXOOUDpXLgSejQY2kUfh-EH7LRkBc0TMMYBruC')
+DINGTALK_REDIRECT_URI = os.environ.get('DINGTALK_REDIRECT_URI', 'http://localhost:8000/accounts/dingtalk/callback/')
+
